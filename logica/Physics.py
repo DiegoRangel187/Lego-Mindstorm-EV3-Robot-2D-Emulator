@@ -9,6 +9,7 @@ class PhysicsObject(Object):
         self.massCenter:tuple[int] = self.bounds.center
         self.torque:tuple[int] = (0, 0)
         self.mass:int = mass
+        self.speed = (0, 0)
 
     def setSpeed(self, speed:tuple[int]):
         self.maxSpeed = speed
@@ -18,7 +19,10 @@ class PhysicsObject(Object):
 
     def setTorque(self, torque:tuple[int]):
         self.torque = torque
-    
+
+    def onCollition(self, collided):
+        momentum1 = PhysicsObject.momentum(self.speed)
+        momentum2 = PhysicsObject
     @staticmethod
     def momentum(speed:tuple[int], mass:int):
         return (speed[0]*mass, speed[1]*mass)
