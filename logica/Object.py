@@ -5,6 +5,7 @@ class Object:
         self.bounds:Rect = Rect(coordinates, shape)
         self.angle = 0
         self.color = color
+        self.image = Surface(shape).fill(color)
     
     def setPosition(self, coordinates:tuple[int]):
         self.bounds.x, self.bounds.y = coordinates
@@ -13,7 +14,10 @@ class Object:
         self.__draw = draw
 
     def draw(self, matriz:list[bool], surface:Surface):
-        self.__draw()
+        self.__draw(self, surface)
 
     def getImage(self):
+        return self.image
+
+    def logic(self):
         pass
