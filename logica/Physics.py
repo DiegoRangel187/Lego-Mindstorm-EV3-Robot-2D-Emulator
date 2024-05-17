@@ -19,3 +19,16 @@ class PhysicsObject(Object):
     def setTorque(self, torque:tuple[int]):
         self.torque = torque
     
+    @staticmethod
+    def momentum(speed:tuple[int], mass:int):
+        return (speed[0]*mass, speed[1]*mass)
+
+    @staticmethod
+    def torque(ratio:tuple[int], force:tuple[int]):
+        return (ratio[0]*force[0], ratio[1]*force[1])
+
+    @staticmethod
+    def force(acceleration:tuple[int], mass:int):
+        return (acceleration[0]*mass, acceleration[1]*mass)
+
+    
