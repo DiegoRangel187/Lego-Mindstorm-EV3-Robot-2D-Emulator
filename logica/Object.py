@@ -5,16 +5,15 @@ class Object:
         self.bounds:Rect = Rect(coordinates, shape)
         self.angle = 0
         self.color = color
-        self.image = Surface(shape).fill(color)
+        self.image = Surface(shape)
+        self.image.fill(color)
+
     
     def setPosition(self, coordinates:tuple[int]):
         self.bounds.x, self.bounds.y = coordinates
 
-    def setDrawMethod(self, draw):
-        self.__draw = draw
-
     def draw(self, matriz:list[bool], surface:Surface):
-        self.__draw(self, surface)
+        surface.blit(self.image, self.bounds)
 
     def getImage(self):
         return self.image

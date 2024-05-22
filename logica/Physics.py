@@ -1,5 +1,6 @@
-from Object import Object
+from .Object import Object
 from math import sin, sqrt
+from pygame import transform, Surface
 class PhysicsObject(Object):
 
     def __init__(self, coordinates:tuple[int]=(0,0), shape:tuple[int] = (0,0), color:tuple[int] = (0, 0), mass:int = 0):
@@ -13,6 +14,7 @@ class PhysicsObject(Object):
         self.angle = 0
         self.resistence = 0
         self.gravity = 0
+        self.i = self.mass*(self.bounds.width**2 + self.bounds.height**2)/12
 
     def setSpeed(self, speed:tuple[int]):
         self.speed[0] = speed
@@ -34,7 +36,7 @@ class PhysicsObject(Object):
         self.acceleration[1] = (Acceleration_X + AccelerationX, Acceleration_Y + AccelerationY)
 
     def addTorque(self, torque:int):
-        self.torque[1] = torque + self.torque
+        self.torque[1] += torque
 
     def onCollition(self, speed:tuple[int], aceletarion:tuple[int], ratio:int, force:int, angle:int, mass:int):
         mt = mass + self.mass
@@ -53,6 +55,12 @@ class PhysicsObject(Object):
         self.addTorque(
             ratio*force*sin(angle)
         )
+        print(self.speed[0])
+
+    def draw(self, matriz:list[bool], surface:Surface):
+        rotated_image = transform.rotate(self.image, 45)
+        rotated_rect = rotated_image.get_rect(center=self.bounds.center)
+        surface.blit(rotated_image, rotated_rect.topleft)
 
     def logic(self):
         acceleration = (
@@ -61,22 +69,21 @@ class PhysicsObject(Object):
             )
         normal = PhysicsObject.normalVector(acceleration)
         self.acceleration[0] = (
-            acceleration[0] - normal[0]*self.gravity*self.resistence,
+            acceleration[0] - normal[0]*self.gravity*self.resistence,   
             acceleration[1] - normal[1]*self.gravity*self.resistence
         )
         self.acceleration[1] = (0, 0)
         self.speed[0] = (
-            self.speed[0][0] + self.speed[1][0] + self.aceletarion[0],
-            self.speed[0][1] + self.speed[1][1] + self.aceletarion[1]
+            self.speed[0][0] + self.speed[1][0] + self.acceleration[0][0],
+            self.speed[0][1] + self.speed[1][1] + self.acceleration[0][1]
             )
         self.speed[1] = (0, 0)
         self.setPosition((
             self.bounds.x + self.speed[0][0],
             self.bounds.y + self.speed[0][1]
         ))
-        i = self.mass*(self.bounds.x**2 + self.bounds.y**2)/12
-        torque = (self.torque[0] + self.torque[1]) - (self.torque[0] + self.torque[1])/i*self.mass*self.bounds.width
-        self.angle += torque/i
+        torque = (self.torque[0] + self.torque[1]) - ((self.torque[0] + self.torque[1])/self.i)*self.mass*self.bounds.width*self.resistence
+        self.angle += torque/self.i
         self.torque[0] = torque
         self.torque[1] = 0
 
