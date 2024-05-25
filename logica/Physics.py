@@ -1,6 +1,6 @@
-from .Object import Object
+from .Object import Object, ObjectColletion
 from math import sin, sqrt
-from pygame import transform, Surface
+from pygame import transform, Surface, Rect
 class PhysicsObject(Object):
 
     def __init__(self, coordinates:tuple[int]=(0,0), shape:tuple[int] = (0,0), color:tuple[int] = (0, 0), mass:int = 0):
@@ -57,10 +57,8 @@ class PhysicsObject(Object):
         )
         print(self.speed[0])
 
-    def draw(self, matriz:list[bool], surface:Surface):
-        rotated_image = transform.rotate(self.image, 45)
-        rotated_rect = rotated_image.get_rect(center=self.bounds.center)
-        surface.blit(rotated_image, rotated_rect.topleft)
+    def draw(self, surface:Surface):
+        surface.blit(self.image, self.bounds)
 
     def logic(self):
         acceleration = (
@@ -87,6 +85,9 @@ class PhysicsObject(Object):
         self.torque[0] = torque
         self.torque[1] = 0
 
+    def isCollition(self, rect:Rect):
+        return self.bounds.colliderect(rect)
+
     @staticmethod
     def momentum(speed:tuple[int], mass:int):
         return (speed[0]*mass, speed[1]*mass)
@@ -109,3 +110,22 @@ class PhysicsObject(Object):
         if dot == 0:
             return (0, 0)
         return (vector[0]/dot, vector[1]/dot)
+
+class PhysicsObjectCollection(ObjectColletion):
+
+    def __init__(self, objects:list[Object]):
+        ObjectColletion.__init__(self, objects)
+
+    def isCollition(self, object:PhysicsObject):
+        for i in self.getObjects():
+            if i.bounds.colliderect(object.bounds) and (abs(object.speed[0][0]) > 0.5 or abs(object.speed[0][1]) > 0.5):
+                i.onCollition(
+                    object.speed[0], 
+                    object.acceleration[0], 
+                    object.bounds.width/2, 
+                    PhysicsObject.force(object.acceleration[0], object.mass)[0],
+                    object.angle,
+                    object.mass
+                    )
+                return True
+        return False
