@@ -12,14 +12,20 @@ WINDOW_SIZE = (WIDTH, HEIGHT)
 # Crear la ventana
 window = pg.display.set_mode(WINDOW_SIZE)
 pg.display.set_caption("Mi Ventana de pg")
-bola = PhysicsObject((200, 130), (100, 100), (10, 10, 10), 10)
+bola = PhysicsObject((200, 130), (100, 100), (10, 10, 10), 10, directionable=True, side=-1)
+bola.image = pg.transform.scale(pg.image.load("./Imagenes/cuerpo.png").convert_alpha(), [100, 100])
 #bola.image.fill((255, 255, 255))
 #pg.draw.circle(bola.image, (0, 0, 0), bola.bounds.center, 40)
 bola.addSpeed(
-    (5, 1)
+    (1, 0)
 )
+bola.addTorque(-bola.i*0.04)
+# bola.addAcceleration(
+#     (10, 0)
+# )
+bola.resistence = 0
 rectangles = [
-    PhysicsObject((100,200), (50, 50), (0, 0, 0), 1000)
+    #PhysicsObject((100,200), (50, 50), (0, 0, 0), 1000)
 ]
 
 ob = PhysicsObjectCollection(rectangles)
@@ -40,15 +46,14 @@ while True:
     ob.draw(window)
     bola.logic()
     bola.draw(window)
-    if ob.isCollition(bola) and abs(bola.speed[0][0]) > 0.5:
-        bola.onCollition((0, 0), (0, 0), 0, 0, 0, 100)
+    ob.isCollition(bola)
     if bola.bounds.x + bola.bounds.width - 1 >= WIDTH and abs(bola.speed[0][0]) > 0.5:
-        bola.onCollition((0, 0), (0, 0), 0, 0, 0, 1000)
+        bola.onCollition((0, 0), (0, 0), 0, 0, 1000)
     elif bola.bounds.x + 1 <= 0 and bola.speed[0][0]  < 0:
-        bola.onCollition((0, 0), (0, 0), 0, 0, 0, 1000)
+        bola.onCollition((0, 0), (0, 0), 0, 0, 1000)
     if bola.bounds.y + bola.bounds.height >= HEIGHT and abs(bola.speed[0][0]) > 0.5:
-        bola.onCollition((0, 0), (0, 0), 0, 0, 0, 1000)
+        bola.onCollition((0, 0), (0, 0), 0, 0, 1000)
     elif bola.bounds.y <= 0 and bola.speed[0][1] < 0:
-        bola.onCollition((0, 0), (0, 0), 0, 0, 0, 1000)
+        bola.onCollition((0, 0), (0, 0), 0, 0, 1000)
     pg.display.flip()
     pg.display.update()

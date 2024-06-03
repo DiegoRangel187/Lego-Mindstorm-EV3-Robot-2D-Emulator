@@ -1,9 +1,10 @@
 from .Object import Object, ObjectColletion
-from math import sin, sqrt
-from pygame import transform, Surface, Rect
+from math import sin, sqrt, cos, ceil
+from pygame import transform, Surface, Rect, math
+pi = 3.1415926
 class PhysicsObject(Object):
 
-    def __init__(self, coordinates:tuple[int]=(0,0), shape:tuple[int] = (0,0), color:tuple[int] = (0, 0), mass:int = 0):
+    def __init__(self, coordinates:tuple[int]=(0,0), shape:tuple[int] = (0,0), color:tuple[int] = (0, 0), mass:int = 0, directionable:bool = False, side:int = 0):
         Object.__init__(self, coordinates, shape, color)
         self.maxSpeed:tuple[int] = (0, 0)
         self.acceleration:list[tuple[int]] = [(0,0), (0,0)]
@@ -15,6 +16,8 @@ class PhysicsObject(Object):
         self.resistence = 0
         self.gravity = 0
         self.i = self.mass*(self.bounds.width**2 + self.bounds.height**2)/12
+        self.directionable:bool = directionable
+        self.__side = side
 
     def setSpeed(self, speed:tuple[int]):
         self.speed[0] = speed
@@ -38,52 +41,55 @@ class PhysicsObject(Object):
     def addTorque(self, torque:int):
         self.torque[1] += torque
 
-    def onCollition(self, speed:tuple[int], aceletarion:tuple[int], ratio:int, force:int, angle:int, mass:int):
+    def onCollition(self, speed:tuple[int], aceletarion:tuple[int], ratio:int, angle:int, mass:int):
         mt = mass + self.mass
         speedX, speedY = self.speed[0]
         speed_X, speed_Y = speed
-        aceletarionX, aceletarionY = self.acceleration[0]
-        aceletarion_X, aceletarion_Y = aceletarion
         self.setSpeed((
             (self.mass*speedX - mass*speedX + 2*mass*speed_X)/mt,
             (self.mass*speedY - mass*speedY + 2*mass*speed_Y)/mt
         ))
         self.setAcceleration((
-            (self.mass*aceletarionX - mass*aceletarionX + 2*mass*aceletarion_X)/mt,
-            (self.mass*aceletarionY - mass*aceletarionY + 2*mass*aceletarion_Y)/mt
+            0, 0
         ))
         self.addTorque(
-            ratio*force*sin(angle)
+            ratio*PhysicsObject.force(aceletarion, mass)[0]*sin(angle)
         )
-        print(self.speed[0])
 
     def draw(self, surface:Surface):
-        surface.blit(self.image, self.bounds)
+        angle = self.angle*180/pi
+        rotated_image = transform.rotate(self.image, angle)
+        new_rect = rotated_image.get_rect(center = self.bounds.center)
+        surface.blit(rotated_image, new_rect.topleft)
 
     def logic(self):
-        acceleration = (
-            self.acceleration[0][0] + self.acceleration[1][0],
-            self.acceleration[0][1] + self.acceleration[1][1]
-            )
-        normal = PhysicsObject.normalVector(acceleration)
         self.acceleration[0] = (
-            acceleration[0] - normal[0]*self.gravity*self.resistence,   
-            acceleration[1] - normal[1]*self.gravity*self.resistence
+            (self.acceleration[0][0] + self.acceleration[1][0])*(1-self.resistence),   
+            (self.acceleration[0][1] + self.acceleration[1][1])*(1-self.resistence)
         )
         self.acceleration[1] = (0, 0)
-        self.speed[0] = (
-            self.speed[0][0] + self.speed[1][0] + self.acceleration[0][0],
-            self.speed[0][1] + self.speed[1][1] + self.acceleration[0][1]
-            )
+        self.setSpeed((
+            (self.speed[0][0] + self.speed[1][0] + self.acceleration[0][0])*(1-self.resistence),
+            (self.speed[0][1] + self.speed[1][1] + self.acceleration[0][1])*(1-self.resistence)
+        ))
         self.speed[1] = (0, 0)
+        torque = (self.torque[0] + self.torque[1]) - ((self.torque[0] + self.torque[1]))*self.mass*self.bounds.width*self.resistence
+        self.angle += torque/self.i
+        self.angle %= 2*pi
+        self.torque[0] = torque
+        self.torque[1] = 0
+        if(self.directionable):
+            normaSpeed = PhysicsObject.norma(self.speed[0])
+            normalAngle = PhysicsObject.vectorNormalAngle(self.angle)
+            signed = (torque/(abs(torque)+0.00000000000001))*self.__side
+            self.setSpeed((
+                -normalAngle[0]*normaSpeed*signed,
+                normalAngle[1]*normaSpeed*signed
+            ))
         self.setPosition((
             self.bounds.x + self.speed[0][0],
             self.bounds.y + self.speed[0][1]
         ))
-        torque = (self.torque[0] + self.torque[1]) - ((self.torque[0] + self.torque[1])/self.i)*self.mass*self.bounds.width*self.resistence
-        self.angle += torque/self.i
-        self.torque[0] = torque
-        self.torque[1] = 0
 
     def isCollition(self, rect:Rect):
         return self.bounds.colliderect(rect)
@@ -101,7 +107,7 @@ class PhysicsObject(Object):
         return (acceleration[0]*mass, acceleration[1]*mass)
 
     @staticmethod
-    def dotProduct(vector:tuple[int]):
+    def norma(vector:tuple[int]):
         return sqrt(vector[0]**2 + vector[1]**2)
     
     @staticmethod
@@ -111,6 +117,13 @@ class PhysicsObject(Object):
             return (0, 0)
         return (vector[0]/dot, vector[1]/dot)
 
+    @staticmethod
+    def vectorNormalAngle(angle):
+        return (
+            cos(angle),
+            sin(angle)
+        )
+
 class PhysicsObjectCollection(ObjectColletion):
 
     def __init__(self, objects:list[Object]):
@@ -119,13 +132,19 @@ class PhysicsObjectCollection(ObjectColletion):
     def isCollition(self, object:PhysicsObject):
         for i in self.getObjects():
             if i.bounds.colliderect(object.bounds) and (abs(object.speed[0][0]) > 0.5 or abs(object.speed[0][1]) > 0.5):
+                speed = i.speed[0]
+                acceleration = i.acceleration[0]
+                torque = i.torque
+                angle = i.angle
                 i.onCollition(
                     object.speed[0], 
                     object.acceleration[0], 
-                    object.bounds.width/2, 
-                    PhysicsObject.force(object.acceleration[0], object.mass)[0],
+                    object.bounds.width/2,
                     object.angle,
                     object.mass
                     )
+                object.onCollition(speed, acceleration, i.bounds.width/2, angle, i.mass)
+                
+                
                 return True
         return False
