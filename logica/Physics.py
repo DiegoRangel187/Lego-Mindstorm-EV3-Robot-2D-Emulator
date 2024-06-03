@@ -14,7 +14,7 @@ class PhysicsObject(Object):
         self.speed:list[tuple[int]] = [(0,0), (0,0)]
         self.angle = 0
         self.resistence = 0
-        self.gravity = 0
+        self.gravity = 9.8
         self.i = self.mass*(self.bounds.width**2 + self.bounds.height**2)/12
         self.directionable:bool = directionable
         self.__side = side
@@ -49,6 +49,8 @@ class PhysicsObject(Object):
             (self.mass*speedX - mass*speedX + 2*mass*speed_X)/mt,
             (self.mass*speedY - mass*speedY + 2*mass*speed_Y)/mt
         ))
+        if(self.directionable):
+            self.__side = 0
         self.setAcceleration((
             0, 0
         ))
@@ -59,21 +61,24 @@ class PhysicsObject(Object):
     def draw(self, surface:Surface):
         angle = self.angle*180/pi
         rotated_image = transform.rotate(self.image, angle)
-        new_rect = rotated_image.get_rect(center = self.bounds.center)
-        surface.blit(rotated_image, new_rect.topleft)
+        self.bounds = rotated_image.get_rect(center = self.bounds.center)
+        surface.blit(rotated_image, self.bounds.topleft)
+
+    def setSide(self, side:int):
+        self.__side = side
 
     def logic(self):
         self.acceleration[0] = (
-            (self.acceleration[0][0] + self.acceleration[1][0])*(1-self.resistence),   
-            (self.acceleration[0][1] + self.acceleration[1][1])*(1-self.resistence)
+            (self.acceleration[0][0] + self.acceleration[1][0])/(self.resistence*self.gravity),   
+            (self.acceleration[0][1] + self.acceleration[1][1])/(self.resistence*self.gravity)
         )
         self.acceleration[1] = (0, 0)
-        self.setSpeed((
-            (self.speed[0][0] + self.speed[1][0] + self.acceleration[0][0])*(1-self.resistence),
-            (self.speed[0][1] + self.speed[1][1] + self.acceleration[0][1])*(1-self.resistence)
-        ))
+        self.speed[0] = (
+            (self.speed[0][0] + self.speed[1][0] + self.acceleration[0][0]),
+            (self.speed[0][1] + self.speed[1][1] + self.acceleration[0][1])
+        )
         self.speed[1] = (0, 0)
-        torque = (self.torque[0] + self.torque[1]) - ((self.torque[0] + self.torque[1]))*self.mass*self.bounds.width*self.resistence
+        torque = (self.torque[0] + self.torque[1]) - (self.torque[0] + self.torque[1])*self.resistence
         self.angle += torque/self.i
         self.angle %= 2*pi
         self.torque[0] = torque
@@ -81,11 +86,13 @@ class PhysicsObject(Object):
         if(self.directionable):
             normaSpeed = PhysicsObject.norma(self.speed[0])
             normalAngle = PhysicsObject.vectorNormalAngle(self.angle)
-            signed = (torque/(abs(torque)+0.00000000000001))*self.__side
-            self.setSpeed((
-                -normalAngle[0]*normaSpeed*signed,
-                normalAngle[1]*normaSpeed*signed
-            ))
+            signedX = (torque/(abs(torque)+0.00000000000001))*self.__side
+            signedY = -signedX
+            if signedX > 0:
+                self.setSpeed((
+                    normalAngle[0]*normaSpeed*signedX,
+                    normalAngle[1]*normaSpeed*signedY
+                ))
         self.setPosition((
             self.bounds.x + self.speed[0][0],
             self.bounds.y + self.speed[0][1]
