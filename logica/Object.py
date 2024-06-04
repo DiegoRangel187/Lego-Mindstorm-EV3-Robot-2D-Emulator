@@ -1,19 +1,22 @@
-from pygame import Rect
-from pygame import Surface
+from pygame import transform, Surface, Rect
+pi = 3.1415926
 class Object:
-    def __init__(self, coordinates:tuple[int]=(0,0), shape:tuple[int] = (0,0), color:tuple[int] = (0, 0)):
+    def __init__(self, coordinates:tuple[int]=(0,0), shape:tuple[int] = (0,0), color:tuple[int] = (0, 0, 0)):
         self.bounds:Rect = Rect(coordinates, shape)
         self.angle = 0
         self.color = color
         self.image = Surface(shape)
-        self.image.fill(color)
+        #self.image.fill(color)
 
     
     def setPosition(self, coordinates:tuple[int]):
         self.bounds.x, self.bounds.y = coordinates
 
     def draw(self, surface:Surface):
-        surface.blit(self.image, self.bounds)
+        angle = self.angle*180/pi
+        rotated_image = transform.rotate(self.image, angle)
+        self.bounds = rotated_image.get_rect(center = self.bounds.center)
+        surface.blit(rotated_image, self.bounds.topleft)
 
     def getImage(self):
         return self.image

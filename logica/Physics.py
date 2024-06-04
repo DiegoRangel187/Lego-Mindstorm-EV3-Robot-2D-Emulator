@@ -1,6 +1,6 @@
 from .Object import Object, ObjectColletion
 from math import sin, sqrt, cos, ceil
-from pygame import transform, Surface, Rect, math
+from pygame import transform, Surface, Rect
 pi = 3.1415926
 class PhysicsObject(Object):
 
@@ -36,7 +36,11 @@ class PhysicsObject(Object):
     def addAcceleration(self, acceleration:tuple[int]):
         AccelerationX, AccelerationY = acceleration
         Acceleration_X, Acceleration_Y = self.acceleration[1]
-        self.acceleration[1] = (Acceleration_X + AccelerationX, Acceleration_Y + AccelerationY)
+        res = self.gravity*self.resistence
+        self.acceleration[1] = (
+            0 if abs(Acceleration_Y + AccelerationY) < res else (Acceleration_X + AccelerationX- res), 
+            o if abs(Acceleration_Y + AccelerationX) < res else (Acceleration_Y + AccelerationY - res)
+        )
 
     def addTorque(self, torque:int):
         self.torque[1] += torque
@@ -58,27 +62,24 @@ class PhysicsObject(Object):
             ratio*PhysicsObject.force(aceletarion, mass)[0]*sin(angle)
         )
 
-    def draw(self, surface:Surface):
-        angle = self.angle*180/pi
-        rotated_image = transform.rotate(self.image, angle)
-        self.bounds = rotated_image.get_rect(center = self.bounds.center)
-        surface.blit(rotated_image, self.bounds.topleft)
-
     def setSide(self, side:int):
         self.__side = side
 
+    def getSide(self)->int:
+        return self.__side
+
     def logic(self):
         self.acceleration[0] = (
-            (self.acceleration[0][0] + self.acceleration[1][0])/(self.resistence*self.gravity),   
-            (self.acceleration[0][1] + self.acceleration[1][1])/(self.resistence*self.gravity)
+            (self.acceleration[0][0] + self.acceleration[1][0]),   
+            (self.acceleration[0][1] + self.acceleration[1][1])
         )
         self.acceleration[1] = (0, 0)
         self.speed[0] = (
-            (self.speed[0][0] + self.speed[1][0] + self.acceleration[0][0]),
-            (self.speed[0][1] + self.speed[1][1] + self.acceleration[0][1])
+            (self.speed[0][0] + self.speed[1][0] + self.acceleration[0][0])*(1-self.resistence),
+            (self.speed[0][1] + self.speed[1][1] + self.acceleration[0][1])*(1-self.resistence)
         )
         self.speed[1] = (0, 0)
-        torque = (self.torque[0] + self.torque[1]) - (self.torque[0] + self.torque[1])*self.resistence
+        torque = (self.torque[0] + self.torque[1])*(1-self.resistence)
         self.angle += torque/self.i
         self.angle %= 2*pi
         self.torque[0] = torque
@@ -143,14 +144,15 @@ class PhysicsObjectCollection(ObjectColletion):
                 acceleration = i.acceleration[0]
                 torque = i.torque
                 angle = i.angle
+                ratio = sqrt((i.bounds.centerx-object.bounds.centerx)**2 + (i.bounds.centery - object.bounds.centery)**2)
                 i.onCollition(
                     object.speed[0], 
                     object.acceleration[0], 
-                    object.bounds.width/2,
+                    ratio,
                     object.angle,
                     object.mass
                     )
-                object.onCollition(speed, acceleration, i.bounds.width/2, angle, i.mass)
+                object.onCollition(speed, acceleration, ratio, angle, i.mass)
                 
                 
                 return True
