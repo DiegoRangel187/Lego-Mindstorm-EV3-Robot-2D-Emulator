@@ -16,6 +16,9 @@ class Motor:
             case Port.C:
                 self.motor:RobotMotor = self.__robot.motorC
 
+    def angle(self):
+        return self.motor.angle()
+
     def speed(self):
         return self.motor.speed()
 
@@ -24,3 +27,13 @@ class Motor:
 
     def stop(self):
         self.motor.stop()
+
+class UltrasonicSensor:
+
+    def __init__(self, port):
+        time.sleep(1)
+        robot:Robot = Robot.createRobot()
+        self.__sensor = robot.head.robotSensor
+
+    def distance(self):
+        return self.__sensor.distance()

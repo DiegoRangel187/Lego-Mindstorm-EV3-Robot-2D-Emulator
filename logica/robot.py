@@ -7,6 +7,25 @@ from math import sqrt
 import time
 import threading
 
+class RobotSensor:
+
+    def __init__(self, head):
+        self.__head = head
+        self.__continue = False
+        self.__head.setEvent(self.__encontrado)
+        self.__distance:int = 0
+
+    def __encontrado(self, distance:int):
+        self.__continue = False
+        self.__distance = distance
+
+    def distance(self):
+        self.__continue = True
+        self.__head.initLazer()
+        while self.__continue:
+            time.sleep(0.01)
+        return self.__distance
+
 class RobotMotor:
 
     def __init__(self, port, robot):
@@ -43,6 +62,8 @@ class RobotMotor:
                         self.__robot.appendAction(self.__run0)
                     case 1:
                         self.__robot.appendAction(self.__run1)
+                    case 2:
+                        self.__robot.appendAction(self.__run2)
 
     def __run0(self, robot):
         velAngu = self.__speed*pi/180
@@ -78,6 +99,14 @@ class RobotMotor:
             robot.function = True
         self.__ejecute = False
 
+    def __run2(self, robot):
+        robot.head.angle += self.__speed
+        robot.head.angle %= 2*pi
+        self.__ejecute = False
+
+    def angle(self):
+        return self.__robot.angle
+
     def stop(self):
         self.__speed = 0
         self.__continue = False
@@ -87,9 +116,10 @@ class Lazer(PhysicsObject):
     maxDistance = 2000
 
     def __init__(self, position:tuple[int], angle:int):
-        PhysicsObject.__init__(self, coordinates=position, shape=(1, 1), color=(255, 0, 0), mass=0)
+        PhysicsObject.__init__(self, coordinates=position, shape=(100, 100), color=(255, 0, 0), mass=0)
         self.distance:int = 0
         self.__colitionEvent = None
+        self.__positionInitial = self.bounds.center
 
     def setColitionEvent(self, event):
         self.__colitionEvent = event
@@ -97,26 +127,45 @@ class Lazer(PhysicsObject):
     def setInitialPosition(self, position:tuple[int], angle:int):
         normalVector = PhysicsObject.vectorNormalAngle(angle)
         speed = 40
+        print(angle)
+        self.__positionInitial = position
         self.setSpeed((
             normalVector[0]*speed,
             normalVector[1]*speed
         ))
+
+    def logic(self):
+        norma = PhysicsObject.norma((
+            self.__positionInitial[0]-self.bounds.x,
+            self.__positionInitial[1]-self.bounds.y
+        ))
+        if norma < 200:
+            PhysicsObject.logic(self)
+        else:
+            self.setSpeed((
+                0, 0
+            ))
+            robot = Robot.createRobot()
+            self.distance = sqrt((robot.bounds.centerx-self.bounds.centerx)**2 + (robot.bounds.centery - self.bounds.centery)**2)
+            if self.__colitionEvent:
+                self.__colitionEvent(self.getDistance())
 
     def onCollition(self, speed:tuple[int], aceletarion:tuple[int], ratio:int, angle:int, mass:int):
         self.setSpeed((
             0, 0
         ))
         robot = Robot.createRobot()
-        self.distance = sqrt((robot.bounds.centerx-self.bounds.centerx)**2 + (robot.bounds.centery - self.bounds.centery)**2)
         if self.__colitionEvent:
             self.__colitionEvent(self.getDistance())
 
     def getDistance(self):
-        distance = self.distance
-        if(distance > Lazer.maxDistance):
+        norma = PhysicsObject.norma((
+            self.__positionInitial[0]-self.bounds.x,
+            self.__positionInitial[1]-self.bounds.y
+        ))
+        if(norma > Lazer.maxDistance):
             return Lazer.maxDistance
-        self.distance = 0
-        return distance
+        return norma
 
 class Robot(PhysicsObject):
 
@@ -151,6 +200,7 @@ class Robot(PhysicsObject):
         self.image = self.image.copy()
         self.head.draw(self.image)
         PhysicsObject.draw(self, surface)
+        self.image = image
 
     def setWait(self):
         self.__wait = not self.__wait
@@ -177,11 +227,18 @@ class Head(Object):
             load("./Imagenes/cabeza.png").convert_alpha(),
             (self.bounds.width, self.bounds.height)
             )
+        self.__event = None
         self.lazer:Lazer = Lazer(self.bounds.center, 0)
         self.lazer.i = 1
         self.__wait:bool = False
         self.angle = 0
-        self.__event = None
+        self.robotSensor:RobotSensor = RobotSensor(self)
+        self.lazer.setColitionEvent(self.__event)
+
+    def initLazer(self):
+        robot:Robot = Robot.createRobot()
+        print(robot.bounds.center)
+        self.lazer.setInitialPosition(robot.bounds.center, self.angle)
 
     def logic(self):
         self.lazer.logic()

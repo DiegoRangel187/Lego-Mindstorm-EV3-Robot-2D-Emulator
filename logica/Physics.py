@@ -4,7 +4,7 @@ from pygame import transform, Surface, Rect
 pi = 3.1415926
 class PhysicsObject(Object):
 
-    def __init__(self, coordinates:tuple[int]=(0,0), shape:tuple[int] = (0,0), color:tuple[int] = (0, 0), mass:int = 0, directionable:bool = False, side:int = 0):
+    def __init__(self, coordinates:tuple[int]=(0,0), shape:tuple[int] = (0,0), color:tuple[int] = (0, 0, 0), mass:int = 0, directionable:bool = False, side:int = 0):
         Object.__init__(self, coordinates, shape, color)
         self.maxSpeed:tuple[int] = (0, 0)
         self.acceleration:list[tuple[int]] = [(0,0), (0,0)]
@@ -13,7 +13,7 @@ class PhysicsObject(Object):
         self.mass:int = mass
         self.speed:list[tuple[int]] = [(0,0), (0,0)]
         self.angle = 0
-        self.resistence = 0
+        self.resistence = 0.05
         self.gravity = 9.8
         self.i = self.mass*(self.bounds.width**2 + self.bounds.height**2)/12
         self.directionable:bool = directionable
@@ -140,7 +140,7 @@ class PhysicsObjectCollection(ObjectColletion):
 
     def isCollition(self, object:PhysicsObject):
         for i in self.getObjects():
-            if i.bounds.colliderect(object.bounds) and (abs(object.speed[0][0]) > 0.5 or abs(object.speed[0][1]) > 0.5):
+            if i.bounds.colliderect(object.bounds) and ((abs(object.speed[0][0]) > 0.5 or abs(object.speed[0][1]) > 0.5)):
                 speed = i.speed[0]
                 acceleration = i.acceleration[0]
                 torque = i.torque
@@ -153,8 +153,7 @@ class PhysicsObjectCollection(ObjectColletion):
                     object.angle,
                     object.mass
                     )
+                print(i.bounds.x, i.bounds.y)
                 object.onCollition(speed, acceleration, ratio, angle, i.mass)
-                
-                
                 return True
         return False

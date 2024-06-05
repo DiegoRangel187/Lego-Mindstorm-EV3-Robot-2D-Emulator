@@ -3,6 +3,15 @@ import pygame as pg
 import sys
 from logica.robot import Robot
 from logica.Physics import pi, PhysicsObjectCollection, PhysicsObject
+from typing import (Optional)
+
+class Screen:
+
+    def __init__(self):
+        pass
+
+    def print(self, *values: object):
+        print(*values)
 
 class Light:
 
@@ -19,6 +28,7 @@ class EV3Brick:
 
     def __init__(self):
         self.light = Light()
+        self.screen:Screen = Screen()
         self.__hilo = threading.Thread(target=self.__initGame)
         self.__hilo.start()
 
@@ -29,6 +39,19 @@ class EV3Brick:
         window = pg.display.set_mode(WINDOW_SIZE)
         pg.display.set_caption("Simulador")
         robot:Robot = Robot.createRobot((110, 110))
+        cajas:PhysicsObjectCollection = PhysicsObjectCollection(
+            [
+                # PhysicsObject((0, 0), (100, 100), (0,0,0), 1, False),
+                PhysicsObject((200, 110), (100, 100), (0,0,0), 20, False),
+                PhysicsObject((700, 110), (100, 100), (0,0,0), 10000, False),
+                PhysicsObject((500, 500), (70, 100), (0,0,0), 10000, False),
+                PhysicsObject((500, 500), (70, 100), (0,0,0), 10000, False),
+                PhysicsObject((800, 400), (200, 600), (0,0,0), 10000, False),
+                PhysicsObject((800, 200), (500, 100), (0,0,0), 10000, False),
+                PhysicsObject((100, 200), (10, 100), (0,0,0), 10000, False),
+
+            ]
+        )
         WHITE = (255, 255, 255)
         while True:
             for event in pg.event.get():
@@ -46,6 +69,10 @@ class EV3Brick:
                 robot.onCollition((0, 0), (-robot.torque[0], 0), 0.001, pi/2, 1000)
             else:
                 robot.colition = False
+            cajas.draw(window)
+            robot.colition = cajas.isCollition(robot)
+            cajas.isCollition(robot.head.lazer)
+            cajas.logic()
             robot.logic()
             robot.draw(window)
             pg.display.flip()

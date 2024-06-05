@@ -1,21 +1,21 @@
 from pybricks.hubs import EV3Brick
-from pybricks.ev3devices import Motor
+from pybricks.ev3devices import UltrasonicSensor
 from pybricks.parameters import Port
 from pybricks.tools import wait
+''' Este programa lee la distancia en mm de un 
+ sensor de ultrasonido
+'''
 def main():
  # Inicializar el EV3
  ev3 = EV3Brick()
- # Inicializar un motor en el puerto A
- test_motor = Motor(Port.A)
- test_motor2 = Motor(Port.B)
- # Mueve el motor a una velocidad rotacional de 
- # 500 grados por segundo, durante 5 segundos 
- test_motor2.run(2)
- test_motor.run(1)
- wait (5000)
- # Detiene el motor
- test_motor.stop()
- test_motor2.stop()
+ 
+ # Inicializar el sensor de ultrasonido en el puerto 2
+ sensor_ultrasonido = UltrasonicSensor(Port.S2)
+ # Imprimir la distancia en mm
+ ev3.screen.print(sensor_ultrasonido.distance())
+ 
+ # Esperar 5 segundos
+ wait(5000)
 #-----------------------------------------------------------
 if __name__ == "__main__":
  main()
