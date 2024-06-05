@@ -63,7 +63,8 @@ class PhysicsObject(Object):
         )
 
     def setSide(self, side:int):
-        self.__side = side
+        if(side == 1 or side == 0 or side == -1):
+            self.__side = side
 
     def getSide(self)->int:
         return self.__side
@@ -89,7 +90,7 @@ class PhysicsObject(Object):
             normalAngle = PhysicsObject.vectorNormalAngle(self.angle)
             signedX = (torque/(abs(torque)+0.00000000000001))*self.__side
             signedY = -signedX
-            if signedX > 0:
+            if abs(signedX) > 0:
                 self.setSpeed((
                     normalAngle[0]*normaSpeed*signedX,
                     normalAngle[1]*normaSpeed*signedY

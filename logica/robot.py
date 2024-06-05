@@ -62,6 +62,7 @@ class Robot(PhysicsObject):
         self.__wait:bool = False
         self.__actions:deque = deque()
         self.head.setEvent(self.setWait)
+        self.resistence = 0.1
 
     def draw(self, surface:Surface):
         image = self.image
@@ -77,7 +78,7 @@ class Robot(PhysicsObject):
 
     def logic(self):
         if len(self.__actions) > 0 and not self.__wait:
-            self.__actions.pop()()
+            self.__actions.pop()(self)
         self.head.logic()
         PhysicsObject.logic(self)
 
