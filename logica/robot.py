@@ -1,5 +1,6 @@
 from .Physics import PhysicsObject
 from .Object import Object
+from collections import deque
 from pygame.image import load
 from pygame import transform, Surface, Rect
 from math import sqrt
@@ -16,7 +17,7 @@ class Lazer(PhysicsObject):
     def setColitionEvent(self, event):
         self.__colitionEvent = event
 
-    def setPosition(self, position:tuple[int], angle:int):
+    def setInitialPosition(self, position:tuple[int], angle:int):
         normalVector = PhysicsObject.vectorNormalAngle(angle)
         speed = 40
         self.setSpeed((
@@ -57,14 +58,28 @@ class Robot(PhysicsObject):
             load("./Imagenes/cuerpo.png").convert_alpha(),
             (self.bounds.width, self.bounds.height)
             )
-        self.head:Head = Head(self.bounds.center)
+        self.head:Head = Head((self.bounds.width/2-20, 0))
+        self.__wait:bool = False
+        self.__actions:deque = deque()
+        self.head.setEvent(self.setWait)
 
     def draw(self, surface:Surface):
+        image = self.image
+        self.image = self.image.copy()
+        self.head.draw(self.image)
         PhysicsObject.draw(self, surface)
-        self.head.draw(surface)
+
+    def setWait(self):
+        self.__wait = not self.__wait
+
+    def appendAction(self, action):
+        self.__actions.append(action)
 
     def logic(self):
-        self.head.setPosition(self.bounds.center)
+        if len(self.__actions) > 0 and not self.__wait:
+            self.__actions.pop()()
+        self.head.logic()
+        PhysicsObject.logic(self)
 
 class Head(Object):
 
@@ -74,9 +89,19 @@ class Head(Object):
             load("./Imagenes/cabeza.png").convert_alpha(),
             (self.bounds.width, self.bounds.height)
             )
-        lazer:Lazer = Lazer(self.bounds.center, 0)
+        self.lazer:Lazer = Lazer(self.bounds.center, 0)
+        self.lazer.i = 1
         self.__wait:bool = False
         self.angle = 0
+        self.__event = None
+
+    def logic(self):
+        self.lazer.logic()
+
+    def setEvent(self, event):
+        self.__event = event
 
     def setWait(self):
         self.__wait = not self.__wait
+        if self.__event:
+            self.__event()

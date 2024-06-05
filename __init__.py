@@ -1,7 +1,7 @@
 import pygame as pg
 import sys
 from logica.Physics import PhysicsObject, PhysicsObjectCollection, pi
-from logica.robot import Robot
+from logica.Robot import Robot
 
 # Inicializar Pygame
 pg.init()
@@ -23,7 +23,7 @@ robot.addTorque(robot.i*0.04)
 robot.addAcceleration(
     (0, 0)
 )
-robot.resistence = 0.1
+robot.resistence = 0.001
 rectangles = [
     #PhysicsObject((100,200), (50, 50), (0, 0, 0), 1000)
 ]
