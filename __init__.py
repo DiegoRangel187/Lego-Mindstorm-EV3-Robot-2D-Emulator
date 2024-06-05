@@ -7,12 +7,15 @@ def main():
  ev3 = EV3Brick()
  # Inicializar un motor en el puerto A
  test_motor = Motor(Port.A)
+ test_motor2 = Motor(Port.B)
  # Mueve el motor a una velocidad rotacional de 
  # 500 grados por segundo, durante 5 segundos 
- test_motor.run(500)
+ test_motor2.run(2)
+ test_motor.run(1)
  wait (5000)
  # Detiene el motor
  test_motor.stop()
+ test_motor2.stop()
 #-----------------------------------------------------------
 if __name__ == "__main__":
  main()

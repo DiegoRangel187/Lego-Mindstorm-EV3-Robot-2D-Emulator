@@ -28,7 +28,7 @@ class EV3Brick:
         WINDOW_SIZE = (WIDTH, HEIGHT)
         window = pg.display.set_mode(WINDOW_SIZE)
         pg.display.set_caption("Simulador")
-        robot = Robot.createRobot((WIDTH/2, HEIGHT/2))
+        robot:Robot = Robot.createRobot((110, 110))
         WHITE = (255, 255, 255)
         while True:
             for event in pg.event.get():
@@ -36,15 +36,17 @@ class EV3Brick:
                     pg.quit()
                     sys.exit()
             window.fill((255, 255, 255))
-            robot.logic()
-            robot.draw(window)
             if robot.bounds.centerx + robot.bounds.width/2 + robot.speed[0][0]*2 >= WIDTH and abs(robot.speed[0][0]) > 0.5:
                 robot.onCollition((0, 0), (-robot.torque[0], 0), 0.001, pi/2, 1000)
             elif robot.bounds.centerx - robot.bounds.width/2 <= 0 and robot.speed[0][0]  < 0:
                 robot.onCollition((0, 0), (-robot.torque[0], 0), 0.001, pi/2, 1000)
-            if robot.bounds.centery + robot.bounds.height/2 >= HEIGHT and abs(robot.speed[0][0]) > 0.5:
+            elif robot.bounds.centery + robot.bounds.height/2 >= HEIGHT and abs(robot.speed[0][0]) > 0.5:
                 robot.onCollition((0, 0), (-robot.torque[0], 0), 0.001, pi/2, 1000)
             elif robot.bounds.centery - robot.bounds.height/2 <= 0 and robot.speed[0][1] < 0:
                 robot.onCollition((0, 0), (-robot.torque[0], 0), 0.001, pi/2, 1000)
+            else:
+                robot.colition = False
+            robot.logic()
+            robot.draw(window)
             pg.display.flip()
             pg.display.update()
