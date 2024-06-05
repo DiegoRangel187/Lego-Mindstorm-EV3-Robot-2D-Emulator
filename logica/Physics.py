@@ -153,7 +153,6 @@ class PhysicsObjectCollection(ObjectColletion):
                     object.angle,
                     object.mass
                     )
-                print(i.bounds.x, i.bounds.y)
                 object.onCollition(speed, acceleration, ratio, angle, i.mass)
                 return True
         return False

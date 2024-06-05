@@ -41,15 +41,8 @@ class EV3Brick:
         robot:Robot = Robot.createRobot((110, 110))
         cajas:PhysicsObjectCollection = PhysicsObjectCollection(
             [
-                # PhysicsObject((0, 0), (100, 100), (0,0,0), 1, False),
-                PhysicsObject((200, 110), (100, 100), (0,0,0), 20, False),
-                PhysicsObject((700, 110), (100, 100), (0,0,0), 10000, False),
-                PhysicsObject((500, 500), (70, 100), (0,0,0), 10000, False),
-                PhysicsObject((500, 500), (70, 100), (0,0,0), 10000, False),
-                PhysicsObject((800, 400), (200, 600), (0,0,0), 10000, False),
-                PhysicsObject((800, 200), (500, 100), (0,0,0), 10000, False),
-                PhysicsObject((100, 200), (10, 100), (0,0,0), 10000, False),
-
+                PhysicsObject((0, 0), (100, 100), (0,0,0), 1, False),
+                PhysicsObject((300, 110), (100, 100), (0,0,0), 20, False)
             ]
         )
         WHITE = (255, 255, 255)
@@ -67,8 +60,6 @@ class EV3Brick:
                 robot.onCollition((0, 0), (-robot.torque[0], 0), 0.001, pi/2, 1000)
             elif robot.bounds.centery - robot.bounds.height/2 <= 0 and robot.speed[0][1] < 0:
                 robot.onCollition((0, 0), (-robot.torque[0], 0), 0.001, pi/2, 1000)
-            else:
-                robot.colition = False
             cajas.draw(window)
             robot.colition = cajas.isCollition(robot)
             cajas.isCollition(robot.head.lazer)

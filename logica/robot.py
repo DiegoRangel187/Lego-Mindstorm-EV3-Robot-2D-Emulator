@@ -116,19 +116,20 @@ class Lazer(PhysicsObject):
     maxDistance = 2000
 
     def __init__(self, position:tuple[int], angle:int):
-        PhysicsObject.__init__(self, coordinates=position, shape=(100, 100), color=(255, 0, 0), mass=0)
+        PhysicsObject.__init__(self, coordinates=position, shape=(1, 1), color=(255, 0, 0), mass=0)
         self.distance:int = 0
         self.__colitionEvent = None
         self.__positionInitial = self.bounds.center
+        self.resistence = 0
 
     def setColitionEvent(self, event):
         self.__colitionEvent = event
 
     def setInitialPosition(self, position:tuple[int], angle:int):
         normalVector = PhysicsObject.vectorNormalAngle(angle)
-        speed = 40
-        print(angle)
+        speed = 1
         self.__positionInitial = position
+        self.setPosition(position)
         self.setSpeed((
             normalVector[0]*speed,
             normalVector[1]*speed
@@ -141,6 +142,7 @@ class Lazer(PhysicsObject):
         ))
         if norma < 200:
             PhysicsObject.logic(self)
+            # print(self.bounds.x, self.bounds.y)
         else:
             self.setSpeed((
                 0, 0
@@ -237,7 +239,6 @@ class Head(Object):
 
     def initLazer(self):
         robot:Robot = Robot.createRobot()
-        print(robot.bounds.center)
         self.lazer.setInitialPosition(robot.bounds.center, self.angle)
 
     def logic(self):
@@ -245,6 +246,10 @@ class Head(Object):
 
     def setEvent(self, event):
         self.__event = event
+
+    def draw(self, surface:Surface):
+        self.lazer.draw(surface)
+        PhysicsObject.draw(self, surface)
 
     def setWait(self):
         self.__wait = not self.__wait
